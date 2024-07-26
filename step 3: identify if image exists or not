@@ -1,1 +1,11 @@
+import pandas as pd
+import os
+df = pd.read_csv('MR_test_withcolnames', delimiter='\t', header=0,)
+
+image_directory = ' '
+
+
+#function to check if files in directory
+df check(files)
+  
 
