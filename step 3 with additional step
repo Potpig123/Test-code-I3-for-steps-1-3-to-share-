@@ -1,1 +1,32 @@
+import pandas as pd
+import os
+
+df = pd.read_csv('MR_test_withcolnames.txt', delimiter='\t', header=0,)
+directories = ["C:/Users/ychen/Desktop" ]
+
+
+# Function to check if the image file exists in any of the directories
+def check(file_path, directories):
+    file_name = os.path.basename(file_path)  # Extract the file name from the path
+    for directory in directories:
+        full_path = os.path.join(directory, file_name)
+        if os.path.isfile(full_path):
+            return 'Exists', os.path.join(directory, file_name)
+    return 'NO', file_path
+
+# Apply the function to the specific column and update it in the DataFrame
+df['image_file'] = df['image_file'].apply(
+    lambda file_path: check(file_path, directories)[1]
+)
+
+# Create a new column for file status
+df['file_status'] = df['image_file'].apply(
+    lambda file_path: 'Exists' if any(os.path.isfile(os.path.join(directory, os.path.basename(file_path))) for directory in directories) else 'Not Exists'
+)
+
+# Save the updated DataFrame to a new CSV file
+updated_csv_file_path = 'MR_sub_ex_month_updated.txt'  # Replace with your desired output file path
+
+df.to_csv(updated_csv_file_path, sep='\t', index=False)
+
 
