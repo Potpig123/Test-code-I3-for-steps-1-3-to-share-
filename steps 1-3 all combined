@@ -91,7 +91,12 @@ df['file_status'] = df['image_file'].apply(
     lambda file_path: 'Exists' if any(os.path.isfile(os.path.join(directory, os.path.basename(file_path))) for directory in directories) else 'Not Exists'
 )
 
-# Save the updated DataFrame to a new CSV file
-updated_csv_file_path = 'MR_sub_ex_updated1.txt'  # Replace with your desired output file path
-
+# Save the updated (contains all rows) DataFrame to a new file
+updated_csv_file_path = 'MR_sub_ex_and_nonexist_updated1.txt'  # Replace with your desired output file path
 df.to_csv(updated_csv_file_path, sep='\t', index=False)
+
+existing_files_df = df[df['file_status'] == 'Exists']
+
+# Save the filtered (only rows that exist) DataFrame to a new file
+existing_files_csv_file_path = 'MR_sub_ex_updated1.txt'  # Replace with your desired output file path
+existing_files_df.to_csv(existing_files_csv_file_path, index=False)
