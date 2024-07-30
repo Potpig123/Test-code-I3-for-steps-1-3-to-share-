@@ -6,7 +6,7 @@ directories = ["C:/Users/ychen/Desktop" ]
 
 
 # Function to check if the image file exists in any of the directories
-def check(file_path, directories):
+def check_file_status_and_update_path(file_path, directories):
     file_name = os.path.basename(file_path)  # Extract the file name from the path
     for directory in directories:
         full_path = os.path.join(directory, file_name)
@@ -16,7 +16,7 @@ def check(file_path, directories):
 
 # Apply the function to the specific column and update it in the DataFrame
 df['image_file'] = df['image_file'].apply(
-    lambda file_path: check(file_path, directories)[1]
+    lambda file_path: check_file_status_and_update_path(file_path, directories)[1]
 )
 
 # Create a new column for file status
