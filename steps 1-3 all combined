@@ -1,0 +1,97 @@
+import pandas as pd
+import os
+
+#step 1 (pull columns)
+file_path= 'image03.txt'
+
+df = pd.read_csv(file_path, delimiter='\t') 
+ 
+#pick out columns
+col_interest= ['collection_id',
+               'image03_id',
+               'dataset_id',
+               'src_subject_id',
+               'experiment_id',
+               'sex',
+               'comments_misc',
+               'image_file',
+               'image_description',
+               #'Sex of subject at birth',
+              # 'Age in months at the time of the interview/test/sampling/imaging.'
+               
+               ]
+
+specific_df=df[col_interest]
+
+# Specify the output file 
+output_file_path = 'subset_data1.txt'
+
+# Save the subset DataFrame to a new text file
+specific_df.to_csv(output_file_path, sep='\t', index=False)
+
+
+
+#step 2 (rename file)
+df = pd.read_csv('subset_data1.txt', sep='\t') 
+
+# change directory function
+old_directory = 's3://NDAR_Central_3/submission_60350/'
+new_directory = './image03/'
+
+def change_directory(file_path):
+    return file_path.replace(old_directory, new_directory)
+
+# Apply the function to change image path
+df['image_file'] = df['image_file'].apply(change_directory)
+
+# save new file as txt
+df.to_csv('raw_test1.txt', sep='\t', index=False)
+
+
+#step3 (take out MR)
+df = pd.read_csv('raw_test1.txt', delimiter='\t', header=0,)
+
+# Print the original column names
+#print("Original Column Names:")
+#print(df.columns)
+
+#condition to check 
+condition = df['comments_misc'].str.contains('MR')
+
+#Filter rows based on the condition 
+filtered_df = df[condition]
+
+# Save the filtered DataFrame
+filtered_df.to_csv('MR_test_withcolnames1.txt', sep="\t" , index=False)
+
+print("Saved")
+
+
+#step4 (exist test)
+df = pd.read_csv('MR_test_withcolnames1.txt', delimiter='\t', header=0,)
+directories = ["C:/Users/ychen/Desktop", "C:/Users/ychen/Downloads" ]
+
+
+# Function to check if the image file exists in any of the directories
+def check_file_status_and_update_path(file_path, directories):
+    file_name = os.path.basename(file_path)  # Extract the file name from the path
+    for directory in directories:
+        full_path = os.path.join(directory, file_name)
+        if os.path.isfile(full_path):
+            return 'Exists', os.path.join(directory, file_name)
+    return 'NO', file_path
+
+# Apply the function to the specific column and update it in the DataFrame
+df['image_file'] = df['image_file'].apply(
+    lambda file_path: check_file_status_and_update_path(file_path, directories)[1]
+)
+
+# Create a new column for file status
+df['file_status'] = df['image_file'].apply(
+    lambda file_path: 'Exists' if any(os.path.isfile(os.path.join(directory, os.path.basename(file_path))) for directory in directories) else 'Not Exists'
+)
+
+# Save the updated DataFrame to a new CSV file
+updated_csv_file_path = 'MR_sub_ex_updated1.txt'  # Replace with your desired output file path
+
+df.to_csv(updated_csv_file_path, sep='\t', index=False)
