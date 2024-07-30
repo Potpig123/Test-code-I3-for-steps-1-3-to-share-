@@ -20,8 +20,16 @@ def check(image_file):
 #add column that states if file exists or not
 df['file_status'] = df['image_file'].apply(check)
 
-#save the new file
-df.to_csv('MR_sub_ex_month.txt', sep='\t', index=False)
+#lines 24-28 are to filter out the rows that exist and save it to a separate file
+df_exist = df[df['file_status'] == 'EXIST']
+
+# Save the filtered DataFrame to a new CSV file
+filtered_csv_file_path = 'MR_sub_exist_month.txt'
+df_exist.to_csv(filtered_csv_file_path, index=False)
+
+
+#save the new file (has both exist and non existent rows)
+df.to_csv('MR_sub_exist_and_nonexist_month.txt', sep='\t', index=False)
 
   
 
