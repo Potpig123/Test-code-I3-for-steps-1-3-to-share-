@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 df = pd.read_csv('MR_test_withcolnames.txt', delimiter='\t', header=0,)
-directories = ["C:/Users/ychen/Desktop" ]
+directories = ["C:/Users/ychen/Desktop" #change and add other directories that need to be checked ]
 
 
 # Function to check if the image file exists in any of the directories
