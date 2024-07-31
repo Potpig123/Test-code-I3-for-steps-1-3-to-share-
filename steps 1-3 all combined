@@ -31,6 +31,9 @@ specific_df.to_csv(output_file_path, sep='\t', index=False)
 
 
 
+
+
+
 #step 2 (rename file)
 df = pd.read_csv('subset_data1.txt', sep='\t') 
 
@@ -46,6 +49,11 @@ df['image_file'] = df['image_file'].apply(change_directory)
 
 # save new file as txt
 df.to_csv('raw_test1.txt', sep='\t', index=False)
+
+
+
+
+
 
 
 #step3 (take out MR)
@@ -65,6 +73,11 @@ filtered_df = df[condition]
 filtered_df.to_csv('MR_test_withcolnames1.txt', sep="\t" , index=False)
 
 print("Saved")
+
+
+
+
+
 
 
 #step4 (exist test)
