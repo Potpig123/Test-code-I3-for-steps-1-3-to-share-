@@ -1,10 +1,11 @@
 import pandas as pd
 import os
 
+os.chdir("/xdisk/hongxuding/chen/Meta/")
 #step 1 (pull columns)
-file_path= 'image03.txt'
+original_file_path= '/xdisk/xiaosun/jinchengyu/OAI/00/Package_1230092/image03.txt' #change beased on what original file is 
 
-df = pd.read_csv(file_path, delimiter='\t') 
+df = pd.read_csv(original_file_path, delimiter='\t') 
  
 #pick out columns
 col_interest= ['collection_id',
@@ -18,46 +19,51 @@ col_interest= ['collection_id',
                'image_description',
                #'Sex of subject at birth',
               # 'Age in months at the time of the interview/test/sampling/imaging.'
-               
+               #the two that are commented out doesn't exist as an actual column
                ]
 
 specific_df=df[col_interest]
 
 # Specify the output file 
-output_file_path = 'subset_data1.txt'
+output_file_path = 'subset_data_00month.txt'
 
 # Save the subset DataFrame to a new text file
 specific_df.to_csv(output_file_path, sep='\t', index=False)
 
+print("step 1 done")
 
 
 
 
 
 #step 2 (rename file)
-df = pd.read_csv('subset_data1.txt', sep='\t') 
+subset_file = 'subset_data_00month.txt'
+df = pd.read_csv(subset_file, sep='\t') 
 
 # change directory function
 old_directory = 's3://NDAR_Central_3/submission_60350/'
-new_directory = './image03/'
+new_directory = 'image03/'
 
 def change_directory(file_path):
     return file_path.replace(old_directory, new_directory)
 
-# Apply the function to change image path
+# Apply the function to change image patha
 df['image_file'] = df['image_file'].apply(change_directory)
 
 # save new file as txt
-df.to_csv('raw_test1.txt', sep='\t', index=False)
+raw_file_name = 'raw_sub_00month.txt'
+df.to_csv(raw_file_name, sep='\t', index=False)
 
 
+print("step 2 done")
 
 
 
 
 
 #step3 (take out MR)
-df = pd.read_csv('raw_test1.txt', delimiter='\t', header=0,)
+raw_file_name = 'raw_sub_00month.txt'
+df = pd.read_csv(raw_file_name, delimiter='\t', header=0,)
 
 # Print the original column names
 #print("Original Column Names:")
@@ -70,28 +76,31 @@ condition = df['comments_misc'].str.contains('MR')
 filtered_df = df[condition]
 
 # Save the filtered DataFrame
-filtered_df.to_csv('MR_test_withcolnames1.txt', sep="\t" , index=False)
+filtered_df.to_csv('MR_sub_00month.txt', sep="\t" , index=False)
 
 print("Saved")
 
 
 
+#step 4
 
 
+df = pd.read_csv('MR_sub_00month.txt', delimiter='\t', header=0)
 
-
-#step4 (exist test)
-df = pd.read_csv('MR_test_withcolnames1.txt', delimiter='\t', header=0,)
-directories = ["C:/Users/ychen/Desktop", "C:/Users/ychen/Downloads" ]
+# Define directories
+directories =  ["/xdisk/xiaosun/jinchengyu/OAI/12m/Package_1230092", "/xdisk/xiaosun/jinchengyu/OAI/00/Package_1230092"]
 
 
 # Function to check if the image file exists in any of the directories
 def check_file_status_and_update_path(file_path, directories):
     file_name = os.path.basename(file_path)  # Extract the file name from the path
     for directory in directories:
-        full_path = os.path.join(directory, file_name)
+        full_path = os.path.join(directory, file_path)
+        #print(file_path)
+        print(full_path)
+        #print(directory)
         if os.path.isfile(full_path):
-            return 'Exists', os.path.join(directory, file_name)
+            return 'Exists', full_path
     return 'NO', file_path
 
 # Apply the function to the specific column and update it in the DataFrame
@@ -101,15 +110,17 @@ df['image_file'] = df['image_file'].apply(
 
 # Create a new column for file status
 df['file_status'] = df['image_file'].apply(
-    lambda file_path: 'Exists' if any(os.path.isfile(os.path.join(directory, os.path.basename(file_path))) for directory in directories) else 'Not Exists'
+    lambda file_path: 'Exists' if any(os.path.isfile(os.path.join(directory, file_path)) for directory in directories) else 'Not Exists'
 )
 
-# Save the updated (contains all rows) DataFrame to a new file
-updated_csv_file_path = 'MR_sub_ex_and_nonexist_updated1.txt'  # Replace with your desired output file path
+# Save the updated DataFrame to a new CSV file
+updated_csv_file_path = 'MR_sub_ex_and_nonexist_00month.txt'  # Replace with your desired output file path
 df.to_csv(updated_csv_file_path, sep='\t', index=False)
 
 existing_files_df = df[df['file_status'] == 'Exists']
 
-# Save the filtered (only rows that exist) DataFrame to a new file
-existing_files_csv_file_path = 'MR_sub_ex_updated1.txt'  # Replace with your desired output file path
-existing_files_df.to_csv(existing_files_csv_file_path, index=False)
+# Save the filtered DataFrame to a new CSV file
+existing_files_csv_file_path = 'MR_sub_ex_00month.txt'  # Replace with your desired output file path
+existing_files_df.to_csv(existing_files_csv_file_path, sep='\t', index=False)
+
+print("done")
