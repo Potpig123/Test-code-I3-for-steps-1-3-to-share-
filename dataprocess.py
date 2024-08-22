@@ -4,6 +4,7 @@ import os
 import tarfile
 from io import BytesIO
 import zlib
+import gzip
 
 def readable_dicom_file(content):
 	try:
@@ -22,8 +23,11 @@ def tarfile_read(tar_dir, out_dir, type, pid, lor, wave):
 
 		try:
 			members = tars.getmembers()
-		except zlib.error as e:
-			print(f"Error reading tar members: {e}")
+		except zlib.error as e1:
+			print(f"Error reading tar members: {e1}")
+			return
+		except gzip.BadGzipFile as e2:
+			print(f"Error reading tar members: {e2}")
 			return
 		
 		for member in members:
