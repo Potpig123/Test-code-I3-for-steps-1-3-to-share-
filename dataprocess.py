@@ -5,6 +5,7 @@ import tarfile
 from io import BytesIO
 import zlib
 import gzip
+import argparse
 
 def readable_dicom_file(content):
 	try:
@@ -24,10 +25,10 @@ def tarfile_read(tar_dir, out_dir, type, pid, lor, wave):
 		try:
 			members = tars.getmembers()
 		except zlib.error as e1:
-			print(f"Error reading tar members: {e1}")
+			print(f"Error zlib reading tar members: {e1}")
 			return
 		except gzip.BadGzipFile as e2:
-			print(f"Error reading tar members: {e2}")
+			print(f"Error gzip reading tar members: {e2}")
 			return
 		
 		for member in members:
@@ -37,12 +38,18 @@ def tarfile_read(tar_dir, out_dir, type, pid, lor, wave):
 					continue
 
 				name = member.name[2:]
+				if len(name) > 4:
+					print(tar_dir, 'wrong zip name.')
+					break
 				name = pid + lor + wave + name + type + '.npy'
 				save_dir = os.path.join(out_dir,name)
 				
 				content = file.read()
 				if readable_dicom_file(content):
-					img = pydicom.dcmread(BytesIO(content)).pixel_array
+					try:
+						img = pydicom.dcmread(BytesIO(content)).pixel_array
+					except AttributeError:
+						continue
 					img -= np.min(img)
 					if np.max(img) == 0:
 						return
@@ -52,11 +59,11 @@ def tarfile_read(tar_dir, out_dir, type, pid, lor, wave):
 				else:
 					print(file,'cannot read')
 					return
-					
 
-		
+
+
 def meta_ext(txt_dir, wave, origin_dir):
-	lordict = {'RIGHT':'R', 'LEFT':'L'}
+	lordict = {'RIGHT':'R', 'LEFT':'L', 'THIGH':'T'}
 	typedict = {'MP_LOCATOR':'ML',
 				 'SAG_3D_DESS':'S3D', 
 				 'COR_FISP':'CF', 
@@ -124,20 +131,30 @@ def shape_check(image,set_shape=(384,384)):
         image = pad_crop(image,set_shape)
         return image
 
+
+def get_args_parser():
+	parser = argparse.ArgumentParser('Dataset', add_help=False)
+
+	parser.add_argument('--txts_dir', default='/xdisk/hongxuding/chen/Meta/30_month_files/MR_sub_ex_30month.txt',
+                        help='Meta data')
+	parser.add_argument('--wave', default='M30',
+                        help='wave of patient')
+
+
+	return parser
+
 if __name__ == '__main__':
-	txts_dir = '/xdisk/hongxuding/chen/Meta/18_month_files/MR_sub_ex_18month.txt'
-	wave = 'M18'
-	origin_dir = '/xdisk/xiaosun/jinchengyu/M18T/'
+	args = get_args_parser()
+	args = args.parse_args()
+	origin_dir = '/xdisk/xiaosun/jinchengyu/Slices/'
 
 #	txts = ['00_month_files/MR_sub_ex_00month.txt', '18_month_files/MR_sub_ex_18month.txt', '24_month_files/MR_sub_ex_24month.txt',
 #		 	'30_month_files/MR_sub_ex_30month.txt', '36_month_files/MR_sub_ex_36month.txt', '48_month_files/MR_sub_ex_48month.txt',
 #			'72_month_files/MR_sub_ex_72month.txt', '96_month_files/MR_sub_ex_96month.txt']
 
-	meta_ext(txts_dir, wave, origin_dir)
+	meta_ext(args.txts_dir, args.wave, origin_dir)
 
 #	out_dir = '/xdisk/hongxuding/jinchengyu/pngs/'
-#	tars_dir = ['/xdisk/xiaosun/jinchengyu/OAI/Package_1230090/image03/18m/2.D.2/9488441/20051228/10643608.tar.gz',
-#				'/xdisk/xiaosun/jinchengyu/OAI/Package_1230090/image03/18m/2.D.2/9556464/20051229/10642908.tar.gz',
-#			 	'/xdisk/xiaosun/jinchengyu/OAI/Package_1230090/image03/18m/2.D.2/9436426/20051222/10644208.tar.gz']
+#	tars_dir = ['/xdisk/xiaosun/jinchengyu/OAI/Package_1230502/image03/48m/6.C.1/9273362/20090721/12682013.tar.gz']
 #	for tar_dir in tars_dir:
 #		tarfile_read(tar_dir,out_dir, type='TEST',pid='123321',lor='R', wave='M18')
