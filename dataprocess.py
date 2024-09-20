@@ -10,7 +10,12 @@ import argparse
 def readable_dicom_file(content):
 	try:
 		ds = pydicom.dcmread(BytesIO(content))
-		expected_length = ds.Rows * ds.Columns * (ds.BitsAllocated // 8)
+
+		try:
+			expected_length = ds.Rows * ds.Columns * (ds.BitsAllocated // 8)
+		except AttributeError:
+			return False
+
 		if 'PixelData' in ds and len(ds.PixelData) != expected_length:
 			return False
 		return True
@@ -62,7 +67,7 @@ def tarfile_read(tar_dir, out_dir, type, pid, lor, wave):
 
 
 
-def meta_ext(txt_dir, wave, origin_dir):
+def meta_ext(txt_dir, wave, origin_dir,skiprows=1):
 	lordict = {'RIGHT':'R', 'LEFT':'L', 'THIGH':'T'}
 	typedict = {'MP_LOCATOR':'ML',
 				 'SAG_3D_DESS':'S3D', 
@@ -76,7 +81,7 @@ def meta_ext(txt_dir, wave, origin_dir):
 				 'SAG_IW_TSE':'SIT', 
 				 'SAG_T2_CALC':'STC', 
 				 'AX_T1':'AT'}
-	info = np.loadtxt(txt_dir, str, skiprows=1, delimiter='\t', usecols=(3, 7, 8))
+	info = np.loadtxt(txt_dir, str, skiprows=skiprows, delimiter='\t', usecols=(3, 7, 8))
 	## Index:
 	## 3 ~ PID
 	## 7 ~ directory
@@ -139,6 +144,8 @@ def get_args_parser():
                         help='Meta data')
 	parser.add_argument('--wave', default='M30',
                         help='wave of patient')
+	parser.add_argument('--skiprows', default=1, type=int, 
+						help='continue processing')
 
 
 	return parser
@@ -152,9 +159,14 @@ if __name__ == '__main__':
 #		 	'30_month_files/MR_sub_ex_30month.txt', '36_month_files/MR_sub_ex_36month.txt', '48_month_files/MR_sub_ex_48month.txt',
 #			'72_month_files/MR_sub_ex_72month.txt', '96_month_files/MR_sub_ex_96month.txt']
 
-	meta_ext(args.txts_dir, args.wave, origin_dir)
+	meta_ext(args.txts_dir, args.wave, origin_dir,args.skiprows)
 
 #	out_dir = '/xdisk/hongxuding/jinchengyu/pngs/'
-#	tars_dir = ['/xdisk/xiaosun/jinchengyu/OAI/Package_1230502/image03/48m/6.C.1/9273362/20090721/12682013.tar.gz']
+#	tars_dir = ['/xdisk/xiaosun/jinchengyu/OAI/Package_1230502/image03/48m/6.C.1/9106808/20080826/12420316.tar.gz']
 #	for tar_dir in tars_dir:
-#		tarfile_read(tar_dir,out_dir, type='TEST',pid='123321',lor='R', wave='M18')
+#		tarfile_read(tar_dir,out_dir, type='TEST',pid='123321',lor='R', wave='M48')
+
+
+"""
+After the whole data process, run the `filescan.py` file to see the files in that dir.
+"""
